@@ -11,8 +11,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- CSS Stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Inline Theme Initializer (avoids FOUC) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.className = savedTheme + '-theme';
+        })();
+    </script>
 </head>
-<body class="dark-theme">
+<body>
     <div class="app-container">
         <!-- Header -->
         <header class="app-header">
@@ -29,6 +36,16 @@
                 </div>
             </div>
             <div class="header-actions">
+                <!-- Theme Switch Toggle -->
+                <div class="theme-toggle-container">
+                    <label class="theme-switch" for="theme-checkbox" title="Toggle Light/Dark Theme">
+                        <input type="checkbox" id="theme-checkbox">
+                        <span class="slider round">
+                            <span class="icon-sun">☀️</span>
+                            <span class="icon-moon">🌙</span>
+                        </span>
+                    </label>
+                </div>
                 <span class="cache-status" id="cache-status">Checking cache...</span>
                 <button class="btn btn-secondary" id="btn-export-csv" title="Export current filtered view to CSV">
                     <svg class="btn-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

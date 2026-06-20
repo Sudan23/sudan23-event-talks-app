@@ -41,9 +41,16 @@ const tweetPanel = document.getElementById('tweet-panel');
 const toast = document.getElementById('toast');
 const toastMessage = document.getElementById('toast-message');
 const infoDialog = document.getElementById('info-dialog');
+const themeCheckbox = document.getElementById('theme-checkbox');
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
+    // Sync toggle switch state with current resolved theme class
+    const isLight = document.documentElement.classList.contains('light-theme');
+    if (themeCheckbox) {
+        themeCheckbox.checked = isLight;
+    }
+    
     fetchReleaseNotes();
     setupEventListeners();
     setupDialogFallback();
@@ -56,6 +63,15 @@ function setupEventListeners() {
 
     // Export CSV Button Click
     btnExportCSV.addEventListener('click', exportToCSV);
+
+    // Theme Toggle Switch Change
+    if (themeCheckbox) {
+        themeCheckbox.addEventListener('change', () => {
+            const theme = themeCheckbox.checked ? 'light' : 'dark';
+            document.documentElement.className = theme + '-theme';
+            localStorage.setItem('theme', theme);
+        });
+    }
 
     // Filter changes
     searchInput.addEventListener('input', renderFeed);
