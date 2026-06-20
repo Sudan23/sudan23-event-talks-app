@@ -592,12 +592,13 @@ body {
 .card-footer {
     display: flex;
     justify-content: flex-end;
+    gap: 0.5rem;
     margin-top: 1rem;
     padding-top: 0.75rem;
     border-top: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.btn-card-tweet {
+.btn-card-copy, .btn-card-tweet {
     padding: 0.35rem 0.75rem;
     font-size: 0.75rem;
 }

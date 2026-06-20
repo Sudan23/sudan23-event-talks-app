@@ -4,6 +4,7 @@ let selectedUpdateId = null;
 
 // DOM Elements
 const btnRefresh = document.getElementById('btn-refresh');
+const btnExportCSV = document.getElementById('btn-export-csv');
 const cacheStatus = document.getElementById('cache-status');
 const feedLoader = document.getElementById('feed-loader');
 const feedEmpty = document.getElementById('feed-empty');
@@ -52,6 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupEventListeners() {
     // Refresh Button Click
     btnRefresh.addEventListener('click', refreshReleaseNotes);
+
+    // Export CSV Button Click
+    btnExportCSV.addEventListener('click', exportToCSV);
 
     // Filter changes
     searchInput.addEventListener('input', renderFeed);
@@ -229,6 +233,13 @@ function renderFeed() {
                         ${update.content_html}
                     </div>
                     <div class="card-footer">
+                        <button class="btn btn-secondary btn-card-copy" title="Copy plain text to clipboard">
+                            <svg class="btn-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Copy</span>
+                        </button>
                         <button class="btn btn-secondary btn-card-tweet">
                             <svg class="btn-icon" viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
                                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -238,10 +249,31 @@ function renderFeed() {
                     </div>
                 `;
                 
+                // Copy Card Content Event
+                const btnCardCopy = updateCard.querySelector('.btn-card-copy');
+                btnCardCopy.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent selecting the card for tweeting
+                    navigator.clipboard.writeText(update.content_text).then(() => {
+                        showToast('Release note copied to clipboard!');
+                        // Small success state feedback on the button
+                        const span = btnCardCopy.querySelector('span');
+                        const originalText = span.textContent;
+                        span.textContent = 'Copied!';
+                        btnCardCopy.style.borderColor = 'var(--color-feature)';
+                        setTimeout(() => {
+                            span.textContent = originalText;
+                            btnCardCopy.style.borderColor = '';
+                        }, 1000);
+                    }).catch(err => {
+                        console.error('Failed to copy card text:', err);
+                        showToast('Failed to copy content.', true);
+                    });
+                });
+                
                 // Select Card Event
                 updateCard.addEventListener('click', (e) => {
-                    // Prevent nested interactive events if we clicked a link inside the card
-                    if (e.target.tagName === 'A') return;
+                    // Prevent nested interactive events if we clicked a link inside the card or copy button
+                    if (e.target.tagName === 'A' || e.target.closest('.btn-card-copy')) return;
                     selectUpdate(update, entry.date);
                 });
                 
@@ -401,4 +433,68 @@ function showToast(message, isError = false) {
         toast.style.transform = 'translateX(-50%) translateY(0)';
         setTimeout(() => toast.classList.add('hidden'), 300);
     }, 3000);
+}
+
+// Export Filtered Release Notes to CSV File
+function exportToCSV() {
+    const query = searchInput.value.toLowerCase().trim();
+    const activeFilters = Object.keys(filterCheckboxes).filter(key => filterCheckboxes[key].checked);
+    
+    const csvRows = [
+        ['Date', 'Type', 'Content Text', 'Source Link', 'Tweet Draft'] // Header row
+    ];
+    
+    releaseNotesData.forEach(entry => {
+        entry.updates.forEach(update => {
+            const matchesType = activeFilters.includes(update.type);
+            const matchesSearch = !query || 
+                update.type.toLowerCase().includes(query) || 
+                update.content_text.toLowerCase().includes(query) || 
+                entry.date.toLowerCase().includes(query);
+                
+            if (matchesType && matchesSearch) {
+                const csvDate = escapeCSVValue(entry.date);
+                const csvType = escapeCSVValue(update.type);
+                const csvText = escapeCSVValue(update.content_text);
+                const csvLink = escapeCSVValue(entry.link);
+                const csvTweet = escapeCSVValue(update.tweet_text);
+                
+                csvRows.push([csvDate, csvType, csvText, csvLink, csvTweet]);
+            }
+        });
+    });
+    
+    if (csvRows.length <= 1) {
+        showToast('No updates found matching your filters to export.', true);
+        return;
+    }
+    
+    const csvContent = csvRows.map(row => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `bigquery_release_notes_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast('CSV export downloaded successfully!');
+}
+
+// Helper to escape CSV values correctly (RFC 4180 standard)
+function escapeCSVValue(val) {
+    if (val === undefined || val === null) return '""';
+    let stringVal = String(val);
+    
+    // Double quotes must be escaped by double double-quotes
+    stringVal = stringVal.replace(/"/g, '""');
+    
+    // Wrap in double quotes if it contains commas, newlines, or quotes
+    if (stringVal.includes(',') || stringVal.includes('\n') || stringVal.includes('\r') || stringVal.includes('"')) {
+        return `"${stringVal}"`;
+    }
+    return stringVal;
 }
