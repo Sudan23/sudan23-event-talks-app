@@ -73,6 +73,12 @@ function setupEventListeners() {
         });
     }
 
+    // Close Composer Button Click
+    const btnCloseComposer = document.getElementById('btn-close-composer');
+    if (btnCloseComposer) {
+        btnCloseComposer.addEventListener('click', deselectUpdate);
+    }
+
     // Filter changes
     searchInput.addEventListener('input', renderFeed);
     Object.values(filterCheckboxes).forEach(cb => {

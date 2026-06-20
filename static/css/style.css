@@ -630,20 +630,44 @@ body {
 .tweet-panel-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    justify-content: space-between;
     margin-bottom: 1.25rem;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.75rem;
+}
+
+.tweet-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
 }
 
 .x-logo {
     color: var(--text-primary);
 }
 
-.tweet-panel-header .panel-title {
+.tweet-header-left .panel-title {
     margin-bottom: 0;
     border-bottom: none;
     padding-bottom: 0;
+}
+
+.btn-close-composer {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.btn-close-composer:hover {
+    background-color: var(--bg-panel-hover);
+    color: var(--text-primary);
 }
 
 .composer-empty-state {
